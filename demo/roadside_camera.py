@@ -1,3 +1,4 @@
+from dis import dis
 import glob
 import os
 import sys
@@ -45,7 +46,10 @@ def dark_img(data, network, cn, color):
     rgb_arr = to_bgra_array(data)
     rgb_arr = np.ascontiguousarray(rgb_arr, dtype=np.uint8)
     img, arr = darknet.array_to_image(rgb_arr)
-    cv2.imshow("darknet", darknet.draw_boxes(darknet.detect_image(network, cn, img), rgb_arr, color))
+    fps_time = time.time()
+    disp = darknet.draw_boxes(darknet.detect_image(network, cn, img), rgb_arr, color)
+    cv2.putText(disp, "FPS: {:.1f}".format(1 / (time.time() - fps_time)), (10, 50), 0, 1, (0, 255, 0), 1, cv2.LINE_AA)
+    cv2.imshow("darknet", disp)
     cv2.waitKey(25)
 
 actor_list = []
@@ -76,6 +80,7 @@ try:
     ego_cam.listen(lambda data: q.append(data))
     while 1:
         if q:
+            t0 = time.time()
             dark_img(q.popleft(), net, cn, color)
 
     time.sleep(300)
